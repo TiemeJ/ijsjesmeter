@@ -103,7 +103,6 @@ function renderLeaderboard() {
     .map(p => ({
       ...p,
       uniqueCount: getUniqueCount(p.id),
-      avgRating: getAverageRating(p.id),
       totalEntries: state.entries.filter(e => e.personId === p.id).length
     }))
     .sort((a, b) => b.uniqueCount - a.uniqueCount || b.totalEntries - a.totalEntries);
@@ -127,13 +126,11 @@ function renderLeaderboard() {
 
     const rankClass = currentRank <= 3 ? `rank-${currentRank}` : '';
     const medal = currentRank <= 3 ? medals[currentRank] : `${currentRank}.`;
-    const avgText = p.avgRating !== null ? `Gem. beoordeling: ${p.avgRating}/10` : '';
     return `
       <li class="${rankClass}">
         <span class="rank-badge">${medal}</span>
         <span class="leader-name">${escapeHtml(p.name)}</span>
         <span class="leader-count">${p.uniqueCount} <span>unieke smaken</span></span>
-        ${avgText ? `<span class="leader-avg">${avgText}</span>` : ''}
       </li>
     `;
   }).join('');
