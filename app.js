@@ -113,11 +113,20 @@ function renderLeaderboard() {
     return;
   }
 
-  const medals = ['🥇', '🥈', '🥉'];
+  const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
-  list.innerHTML = ranked.map((p, i) => {
-    const rankClass = i < 3 ? `rank-${i + 1}` : '';
-    const medal = i < 3 ? medals[i] : `${i + 1}.`;
+  // Ranking with ties: equal uniqueCount shares medal/rank group.
+  let currentRank = 0; // 1-based, increments per distinct score
+  let lastCount = null;
+
+  list.innerHTML = ranked.map((p) => {
+    if (lastCount === null || p.uniqueCount !== lastCount) {
+      currentRank += 1;
+      lastCount = p.uniqueCount;
+    }
+
+    const rankClass = currentRank <= 3 ? `rank-${currentRank}` : '';
+    const medal = currentRank <= 3 ? medals[currentRank] : `${currentRank}.`;
     const avgText = p.avgRating !== null ? `Gem. beoordeling: ${p.avgRating}/10` : '';
     return `
       <li class="${rankClass}">
@@ -287,6 +296,27 @@ async function removePerson(personId) {
 }
 
 function setupEventListeners() {
+  const participantsDialog = document.getElementById('participants-dialog');
+  const openParticipants = document.getElementById('open-participants');
+  const closeParticipants = document.getElementById('close-participants');
+
+  if (participantsDialog && openParticipants) {
+    openParticipants.addEventListener('click', () => {
+      participantsDialog.showModal();
+    });
+  }
+  if (participantsDialog && closeParticipants) {
+    closeParticipants.addEventListener('click', () => {
+      participantsDialog.close();
+    });
+  }
+  if (participantsDialog) {
+    participantsDialog.addEventListener('click', (e) => {
+      // Click on backdrop closes dialog
+      if (e.target === participantsDialog) participantsDialog.close();
+    });
+  }
+
   document.getElementById('add-person-form').addEventListener('submit', async (e) => {
     e.preventDefault();
     const input = document.getElementById('person-name');

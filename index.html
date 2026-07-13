@@ -78,6 +78,83 @@
       gap: 0.5rem;
     }
 
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .section-header h2 {
+      margin-bottom: 0;
+      flex: 1;
+    }
+
+    .icon-btn {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: var(--cream);
+      border: 1px solid #f0e6dc;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      padding: 0;
+      font-size: 1.1rem;
+    }
+
+    .icon-btn:hover {
+      border-color: var(--pink);
+    }
+
+    dialog {
+      border: none;
+      border-radius: var(--radius);
+      box-shadow: 0 20px 80px rgba(0, 0, 0, 0.25);
+      padding: 0;
+      width: min(680px, calc(100vw - 2rem));
+    }
+
+    dialog::backdrop {
+      background: rgba(0, 0, 0, 0.4);
+    }
+
+    .dialog-body {
+      padding: 1.25rem;
+    }
+
+    .dialog-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 1rem;
+      padding: 1rem 1.25rem;
+      border-bottom: 1px solid #f0e6dc;
+      background: linear-gradient(135deg, #fff5f8, var(--cream));
+    }
+
+    .dialog-header h3 {
+      font-size: 1.05rem;
+    }
+
+    .dialog-close {
+      width: 42px;
+      height: 42px;
+      border-radius: 12px;
+      background: transparent;
+      border: 1px solid #f0e6dc;
+      cursor: pointer;
+      padding: 0;
+      font-size: 1.1rem;
+    }
+
+    .dialog-close:hover {
+      background: #fdecea;
+      border-color: #e8c4c0;
+    }
+
     /* Leaderboard */
     .leaderboard {
       list-style: none;
@@ -670,13 +747,19 @@
     </div>
 
     <section id="leaderboard-section">
-      <h2>🏆 Klassement</h2>
+      <div class="section-header">
+        <h2>🏆 Klassement</h2>
+        <button type="button" class="icon-btn" id="open-participants" title="Deelnemers beheren" aria-label="Deelnemers beheren">👤</button>
+      </div>
       <ul class="leaderboard" id="leaderboard"></ul>
     </section>
 
-    <section class="add-person-section">
-      <details>
-        <summary>👤 Deelnemer toevoegen</summary>
+    <dialog id="participants-dialog" aria-label="Deelnemers">
+      <div class="dialog-header">
+        <h3>👤 Deelnemers</h3>
+        <button type="button" class="dialog-close" id="close-participants" aria-label="Sluiten">✕</button>
+      </div>
+      <div class="dialog-body">
         <form class="add-person-form" id="add-person-form">
           <input type="text" id="person-name" placeholder="Naam" required maxlength="40" autocomplete="off">
           <button type="submit" class="btn-primary">Toevoegen</button>
@@ -685,8 +768,8 @@
           <h3>Bestaande deelnemers</h3>
           <div id="person-list" class="person-list"></div>
         </div>
-      </details>
-    </section>
+      </div>
+    </dialog>
 
     <section>
       <h2>➕ Nieuw ijsje toevoegen</h2>
