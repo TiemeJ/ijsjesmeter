@@ -9,6 +9,10 @@ function normalizeFlavor(name) {
   return name.trim().toLowerCase();
 }
 
+function displayFlavor(flavor) {
+  return flavor.trim();
+}
+
 function getUniqueFlavors(personId) {
   const flavors = new Set();
   state.entries
@@ -27,6 +31,38 @@ function getPersonEntries(personId) {
     .sort((a, b) => new Date(b.date) - new Date(a.date));
 }
 
+function getLatestEntry(personId, normalizedFlavor) {
+  const entries = state.entries
+    .filter(e => e.personId === personId && normalizeFlavor(e.flavor) === normalizedFlavor)
+    .sort((a, b) => new Date(b.date) - new Date(a.date));
+  return entries[0] || null;
+}
+
+function getAllUniqueFlavorsAcrossFamily() {
+  const map = new Map(); // normalized -> display
+  for (const e of state.entries) {
+    const norm = normalizeFlavor(e.flavor);
+    if (!norm) continue;
+    if (!map.has(norm)) map.set(norm, displayFlavor(e.flavor));
+  }
+  return [...map.entries()]
+    .map(([norm, display]) => ({ norm, display }))
+    .sort((a, b) => a.display.localeCompare(b.display, 'nl', { sensitivity: 'base' }));
+}
+
+function getUniqueFlavorsForPerson(personId) {
+  const map = new Map(); // normalized -> display
+  for (const e of state.entries) {
+    if (e.personId !== personId) continue;
+    const norm = normalizeFlavor(e.flavor);
+    if (!norm) continue;
+    if (!map.has(norm)) map.set(norm, displayFlavor(e.flavor));
+  }
+  return [...map.entries()]
+    .map(([norm, display]) => ({ norm, display }))
+    .sort((a, b) => a.display.localeCompare(b.display, 'nl', { sensitivity: 'base' }));
+}
+
 function getAverageRating(personId) {
   const entries = state.entries.filter(e => e.personId === personId);
   if (entries.length === 0) return null;
@@ -42,12 +78,21 @@ function escapeHtml(text) {
 
 function setStatus(type, message) {
   const el = document.getElementById('sync-status');
+  if (type === 'ok') {
+    el.hidden = true;
+    return;
+  }
+  el.hidden = false;
   el.className = `sync-status sync-${type}`;
   el.textContent = message;
 }
 
 function setFormsDisabled(disabled) {
   document.querySelectorAll('input, button').forEach(el => {
+    el.disabled = disabled;
+  });
+  const selects = document.querySelectorAll('select');
+  selects.forEach(el => {
     el.disabled = disabled;
   });
 }
@@ -85,55 +130,118 @@ function renderLeaderboard() {
   }).join('');
 }
 
-function renderPeople() {
-  const grid = document.getElementById('people-grid');
+function renderPersonSelect() {
+  const select = document.getElementById('entry-person');
+  if (!select) return;
 
   if (state.people.length === 0) {
-    grid.innerHTML = '<p class="empty-state">Nog geen deelnemers. Voeg hierboven iemand toe!</p>';
+    select.innerHTML = '<option value="" selected disabled>Voeg eerst een deelnemer toe…</option>';
+    select.disabled = true;
     return;
   }
 
-  grid.innerHTML = state.people.map(person => {
-    const entries = getPersonEntries(person.id);
-    const uniqueCount = getUniqueCount(person.id);
+  const current = select.value;
+  select.disabled = false;
+  select.innerHTML = state.people
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'nl', { sensitivity: 'base' }))
+    .map(p => `<option value="${p.id}">${escapeHtml(p.name)}</option>`)
+    .join('');
 
-    const flavorItems = entries.length === 0
-      ? '<p class="no-flavors">Nog geen ijsjes toegevoegd</p>'
-      : `<ul class="flavor-list">${entries.map(e => `
-          <li>
-            <span class="flavor-name">${escapeHtml(e.flavor)}</span>
-            <div class="rating-bar"><div class="rating-bar-fill" style="width:${e.rating * 10}%"></div></div>
-            <span class="flavor-rating">${e.rating}/10</span>
-            <button class="btn-danger" data-action="remove-entry" data-id="${e.id}" title="Verwijderen">✕</button>
-          </li>
-        `).join('')}</ul>`;
+  if (current && state.people.some(p => p.id === current)) {
+    select.value = current;
+  }
+}
 
+function renderPersonList() {
+  const list = document.getElementById('person-list');
+  if (!list) return;
+
+  if (state.people.length === 0) {
+    list.innerHTML = '<div class="muted">Nog geen deelnemers.</div>';
+    return;
+  }
+
+  const peopleSorted = state.people
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'nl', { sensitivity: 'base' }));
+
+  list.innerHTML = peopleSorted.map(p => {
+    const unique = getUniqueCount(p.id);
+    const total = state.entries.filter(e => e.personId === p.id).length;
     return `
-      <div class="person-card" data-person-id="${person.id}">
-        <div class="person-header">
-          <div class="person-info">
-            <h3>${escapeHtml(person.name)}</h3>
-            <div class="unique-counter">
-              Unieke smaken: <span class="count">${uniqueCount}</span>
-            </div>
-          </div>
-          <button class="btn-danger" data-action="remove-person" data-id="${person.id}">Persoon verwijderen</button>
+      <div class="person-row">
+        <div>
+          <div class="name">${escapeHtml(p.name)}</div>
+          <div class="muted">${unique} uniek • ${total} totaal</div>
         </div>
-        <form class="add-flavor-form" data-person-id="${person.id}">
-          <input type="text" placeholder="Smaak / ijsje" required maxlength="80" autocomplete="off">
-          <input type="number" min="0" max="10" step="0.5" value="7" required title="Beoordeling 0-10">
-          <button type="submit" class="btn-secondary">IJsje toevoegen</button>
-        </form>
-        ${flavorItems}
+        <button class="btn-danger" type="button" data-action="remove-person" data-id="${p.id}">Verwijderen</button>
       </div>
     `;
   }).join('');
 }
 
+function renderMatrix() {
+  const empty = document.getElementById('matrix-empty');
+  const wrap = document.getElementById('matrix-wrap');
+  const table = document.getElementById('matrix');
+  if (!empty || !wrap || !table) return;
+
+  if (state.people.length === 0 || state.entries.length === 0) {
+    empty.hidden = false;
+    wrap.hidden = true;
+    table.innerHTML = '';
+    return;
+  }
+
+  empty.hidden = true;
+  wrap.hidden = false;
+
+  const peopleSorted = state.people
+    .slice()
+    .sort((a, b) => a.name.localeCompare(b.name, 'nl', { sensitivity: 'base' }));
+
+  const thead = `
+    <thead>
+      <tr>
+        ${peopleSorted.map(p => `<th>${escapeHtml(p.name)}<div class="muted">(${getUniqueCount(p.id)} uniek)</div></th>`).join('')}
+      </tr>
+    </thead>
+  `;
+
+  const rowCells = peopleSorted.map(p => {
+    const uniques = getUniqueFlavorsForPerson(p.id);
+    if (uniques.length === 0) {
+      return `<td class="list-cell"><span class="dash">—</span></td>`;
+    }
+
+    const items = uniques.map(u => {
+      const latest = getLatestEntry(p.id, u.norm);
+      const rating = latest ? `${latest.rating}/10` : '';
+      const entryId = latest ? latest.id : '';
+      return `
+        <li class="flavor-mini-item">
+          <span class="flavor" title="${escapeHtml(u.display)}">${escapeHtml(u.display)}</span>
+          <span class="meta">
+            ${rating}
+            ${entryId ? `<button type="button" data-action="remove-entry" data-id="${entryId}" aria-label="Verwijder">✕</button>` : ''}
+          </span>
+        </li>
+      `;
+    }).join('');
+
+    return `<td class="list-cell"><ul class="flavor-mini-list">${items}</ul></td>`;
+  }).join('');
+
+  table.innerHTML = `${thead}<tbody><tr>${rowCells}</tr></tbody>`;
+}
+
 function render() {
   if (!isReady) return;
   renderLeaderboard();
-  renderPeople();
+  renderPersonSelect();
+  renderPersonList();
+  renderMatrix();
 }
 
 async function addPerson(name) {
@@ -186,10 +294,9 @@ function setupEventListeners() {
     if (!name) return;
 
     try {
-      setStatus('loading', 'Opslaan…');
       await addPerson(name);
       input.value = '';
-      setStatus('ok', 'Verbonden – wijzigingen worden gedeeld');
+      setStatus('ok');
     } catch (err) {
       console.error(err);
       alert('Kon deelnemer niet opslaan. Controleer je Firebase-instellingen.');
@@ -197,16 +304,18 @@ function setupEventListeners() {
     }
   });
 
-  document.getElementById('people-grid').addEventListener('submit', async (e) => {
-    if (!e.target.classList.contains('add-flavor-form')) return;
+  document.getElementById('add-entry-form').addEventListener('submit', async (e) => {
     e.preventDefault();
 
-    const personId = e.target.dataset.personId;
-    const flavorInput = e.target.querySelector('input[type="text"]');
-    const ratingInput = e.target.querySelector('input[type="number"]');
+    const personSelect = document.getElementById('entry-person');
+    const flavorInput = document.getElementById('entry-flavor');
+    const ratingInput = document.getElementById('entry-rating');
+
+    const personId = personSelect.value;
     const flavor = flavorInput.value.trim();
     const rating = parseFloat(ratingInput.value);
 
+    if (!personId) return;
     if (!flavor) return;
     if (isNaN(rating) || rating < 0 || rating > 10) {
       alert('Beoordeling moet tussen 0 en 10 liggen.');
@@ -214,11 +323,11 @@ function setupEventListeners() {
     }
 
     try {
-      setStatus('loading', 'Opslaan…');
       await addFlavor(personId, flavor, rating);
       flavorInput.value = '';
       ratingInput.value = '7';
-      setStatus('ok', 'Verbonden – wijzigingen worden gedeeld');
+      flavorInput.focus();
+      setStatus('ok');
     } catch (err) {
       console.error(err);
       alert('Kon ijsje niet opslaan.');
@@ -226,7 +335,7 @@ function setupEventListeners() {
     }
   });
 
-  document.getElementById('people-grid').addEventListener('click', async (e) => {
+  document.addEventListener('click', async (e) => {
     const btn = e.target.closest('[data-action]');
     if (!btn) return;
 
@@ -234,13 +343,12 @@ function setupEventListeners() {
     const id = btn.dataset.id;
 
     try {
-      setStatus('loading', 'Opslaan…');
       if (action === 'remove-entry') {
         await removeEntry(id);
       } else if (action === 'remove-person') {
         await removePerson(id);
       }
-      setStatus('ok', 'Verbonden – wijzigingen worden gedeeld');
+      setStatus('ok');
     } catch (err) {
       console.error(err);
       alert('Kon niet verwijderen.');
@@ -293,7 +401,7 @@ async function initFirebase() {
 
     isReady = true;
     setFormsDisabled(false);
-    setStatus('ok', 'Verbonden – wijzigingen worden gedeeld');
+    setStatus('ok');
     render();
   } catch (err) {
     console.error(err);

@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Ijsjesmeter – Familie IJscontest</title>
+  <title>IJsjesmeter – Familie IJscontest</title>
   <style>
     :root {
       --cream: #fff8f0;
@@ -147,7 +147,81 @@
       opacity: 0.55;
     }
 
-    /* Add person */
+    /* Add person (collapsible) */
+    .add-person-section {
+      padding: 0;
+    }
+
+    .add-person-section details {
+      border-radius: var(--radius);
+    }
+
+    .add-person-section summary {
+      list-style: none;
+      cursor: pointer;
+      padding: 0.85rem 1.25rem;
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--chocolate);
+      opacity: 0.7;
+      user-select: none;
+    }
+
+    .add-person-section summary::-webkit-details-marker {
+      display: none;
+    }
+
+    .add-person-section summary::before {
+      content: "▸ ";
+      display: inline-block;
+      transition: transform 0.2s;
+    }
+
+    .add-person-section details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    .add-person-section details[open] summary {
+      opacity: 1;
+      border-bottom: 1px solid #f0e6dc;
+    }
+
+    .add-person-section .add-person-form {
+      padding: 1rem 1.25rem 1.25rem;
+    }
+
+    .person-manage {
+      padding: 0 1.25rem 1.25rem;
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .person-manage h3 {
+      font-size: 0.95rem;
+      opacity: 0.7;
+      margin-top: -0.25rem;
+    }
+
+    .person-list {
+      display: grid;
+      gap: 0.5rem;
+    }
+
+    .person-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.75rem;
+      padding: 0.6rem 0.75rem;
+      border-radius: 12px;
+      background: var(--cream);
+      border: 1px solid #f0e6dc;
+    }
+
+    .person-row .name {
+      font-weight: 650;
+    }
+
     .add-person-form {
       display: flex;
       gap: 0.75rem;
@@ -224,6 +298,182 @@
     .people-grid {
       display: grid;
       gap: 1.25rem;
+    }
+
+    /* Global add flavour */
+    .add-entry-form {
+      display: grid;
+      grid-template-columns: 1.2fr 2fr 120px auto;
+      gap: 0.75rem;
+      align-items: end;
+    }
+
+    .add-entry-form label {
+      font-size: 0.85rem;
+      font-weight: 650;
+      opacity: 0.7;
+      display: block;
+      margin: 0 0 0.25rem 0.1rem;
+    }
+
+    .add-entry-form .field {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+    }
+
+    .add-entry-form select {
+      width: 100%;
+      min-width: 160px;
+    }
+
+    .add-entry-form input[type="number"] {
+      width: 100%;
+      min-width: 120px;
+      text-align: center;
+    }
+
+    .add-entry-form .actions {
+      display: flex;
+      gap: 0.5rem;
+      justify-content: flex-end;
+      align-items: center;
+    }
+
+    .muted {
+      opacity: 0.65;
+      font-size: 0.9rem;
+    }
+
+    /* Matrix view */
+    .matrix-wrap {
+      overflow-x: auto;
+      border: 1px solid #f0e6dc;
+      border-radius: var(--radius);
+      background: white;
+    }
+
+    table.matrix {
+      width: 100%;
+      border-collapse: separate;
+      border-spacing: 0;
+      min-width: 720px;
+    }
+
+    .matrix thead th {
+      position: sticky;
+      top: 0;
+      background: linear-gradient(135deg, #fff5f8, var(--cream));
+      z-index: 2;
+      border-bottom: 1px solid #f0e6dc;
+    }
+
+    .matrix th, .matrix td {
+      padding: 0.65rem 0.75rem;
+      border-bottom: 1px solid #f5f0eb;
+      vertical-align: middle;
+      white-space: nowrap;
+    }
+
+    .matrix tbody tr:last-child td,
+    .matrix tbody tr:last-child th {
+      border-bottom: none;
+    }
+
+    .matrix th.flavor-col {
+      min-width: 220px;
+      text-align: left;
+      font-weight: 700;
+    }
+
+    .matrix td.rating-cell {
+      text-align: center;
+      min-width: 140px;
+    }
+
+    .matrix td.list-cell {
+      vertical-align: top;
+      min-width: 220px;
+    }
+
+    .flavor-mini-list {
+      list-style: none;
+      display: grid;
+      gap: 0.35rem;
+      padding: 0.1rem 0;
+      margin: 0;
+    }
+
+    .flavor-mini-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 0.5rem;
+      padding: 0.35rem 0.45rem;
+      border-radius: 10px;
+      background: var(--cream);
+      border: 1px solid #f0e6dc;
+    }
+
+    .flavor-mini-item .flavor {
+      font-weight: 600;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .flavor-mini-item .meta {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.35rem;
+      flex: 0 0 auto;
+      opacity: 0.85;
+      font-weight: 700;
+      color: #8a6d00;
+    }
+
+    .flavor-mini-item .meta button {
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #e8c4c0;
+      background: transparent;
+      color: #c0392b;
+      cursor: pointer;
+    }
+
+    .flavor-mini-item .meta button:hover {
+      background: #fdecea;
+    }
+
+    .rating-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.4rem;
+      padding: 0.2rem 0.55rem;
+      border-radius: 999px;
+      background: #fff8e6;
+      border: 1px solid #ffe2a8;
+      color: #8a6d00;
+      font-weight: 750;
+      font-size: 0.95rem;
+    }
+
+    .rating-pill button {
+      padding: 0.1rem 0.35rem;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      border: 1px solid #e8c4c0;
+      background: transparent;
+      color: #c0392b;
+      cursor: pointer;
+    }
+
+    .rating-pill button:hover {
+      background: #fdecea;
+    }
+
+    .dash {
+      opacity: 0.35;
     }
 
     .person-card {
@@ -346,8 +596,11 @@
       margin-bottom: 1rem;
     }
 
+    .sync-status[hidden] {
+      display: none;
+    }
+
     .sync-loading { background: #fff8e6; color: #8a6d00; }
-    .sync-ok { background: #e8f8f0; color: var(--mint-dark); }
     .sync-error { background: #fdecea; color: #c0392b; }
 
     .config-warning {
@@ -386,6 +639,18 @@
       .add-flavor-form input[type="number"] {
         width: 100%;
       }
+
+      .add-entry-form {
+        grid-template-columns: 1fr;
+      }
+
+      .add-entry-form .actions {
+        justify-content: stretch;
+      }
+
+      .add-entry-form .actions button {
+        width: 100%;
+      }
     }
   </style>
 </head>
@@ -393,7 +658,7 @@
   <div class="container">
     <header>
       <div class="emoji-header">🍦</div>
-      <h1>Ijsjesmeter</h1>
+      <h1>IJsjesmeter</h1>
       <p>Wie probeert de meeste nieuwe ijsjes in de familie?</p>
     </header>
 
@@ -409,17 +674,48 @@
       <ul class="leaderboard" id="leaderboard"></ul>
     </section>
 
-    <section>
-      <h2>👤 Deelnemer toevoegen</h2>
-      <form class="add-person-form" id="add-person-form">
-        <input type="text" id="person-name" placeholder="Naam" required maxlength="40" autocomplete="off">
-        <button type="submit" class="btn-primary">Toevoegen</button>
-      </form>
+    <section class="add-person-section">
+      <details>
+        <summary>👤 Deelnemer toevoegen</summary>
+        <form class="add-person-form" id="add-person-form">
+          <input type="text" id="person-name" placeholder="Naam" required maxlength="40" autocomplete="off">
+          <button type="submit" class="btn-primary">Toevoegen</button>
+        </form>
+        <div class="person-manage">
+          <h3>Bestaande deelnemers</h3>
+          <div id="person-list" class="person-list"></div>
+        </div>
+      </details>
     </section>
 
     <section>
-      <h2>🍨 IJsjes per persoon</h2>
-      <div class="people-grid" id="people-grid"></div>
+      <h2>➕ Nieuw ijsje toevoegen</h2>
+      <form id="add-entry-form" class="add-entry-form">
+        <div class="field">
+          <label for="entry-person">Persoon</label>
+          <select id="entry-person" required></select>
+        </div>
+        <div class="field">
+          <label for="entry-flavor">Smaak / ijsje</label>
+          <input type="text" id="entry-flavor" placeholder="Bijv. pistache" required maxlength="80" autocomplete="off">
+        </div>
+        <div class="field">
+          <label for="entry-rating">Beoordeling</label>
+          <input type="number" id="entry-rating" min="0" max="10" step="0.5" value="7" required>
+        </div>
+        <div class="actions">
+          <button type="submit" class="btn-secondary">Toevoegen</button>
+        </div>
+      </form>
+      <p class="muted" id="add-entry-hint">Tip: selecteer een persoon, type een smaak, kies een beoordeling.</p>
+    </section>
+
+    <section>
+      <h2>🍨 Overzicht per persoon (alfabetisch)</h2>
+      <div id="matrix-empty" class="empty-state" hidden>Voeg eerst deelnemers en ijsjes toe om het overzicht te zien.</div>
+      <div class="matrix-wrap" id="matrix-wrap" hidden>
+        <table class="matrix" id="matrix"></table>
+      </div>
     </section>
 
     <footer>Data wordt opgeslagen in Firebase – wijzigingen zijn direct zichtbaar voor iedereen</footer>
