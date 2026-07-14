@@ -13,4 +13,4 @@ const FIREBASE_CONFIG = {
 const FAMILY_ID = "ijsjesmeter-familie";
 
 // Family members need this code when registering (share only with your family).
-const FAMILY_ACCESS_CODE = "ijsjes-2026";
+const FAMILY_ACCESS_CODE = "janssen";
