@@ -702,6 +702,97 @@
       opacity: 0.5;
     }
 
+    /* Auth */
+    .auth-screen {
+      max-width: 420px;
+      margin: 0 auto 1.25rem;
+    }
+
+    .auth-card {
+      margin-bottom: 0;
+    }
+
+    .auth-card h2 {
+      margin-bottom: 1rem;
+    }
+
+    .auth-form {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .auth-form label {
+      font-size: 0.85rem;
+      font-weight: 650;
+      opacity: 0.7;
+    }
+
+    .auth-form .field {
+      display: grid;
+      gap: 0.25rem;
+    }
+
+    .auth-switch {
+      margin-top: 1rem;
+      text-align: center;
+      font-size: 0.9rem;
+      opacity: 0.75;
+    }
+
+    .link-btn {
+      background: none;
+      border: none;
+      color: var(--pink-dark);
+      font-weight: 650;
+      cursor: pointer;
+      padding: 0;
+      font-size: inherit;
+    }
+
+    .link-btn:hover {
+      text-decoration: underline;
+    }
+
+    .auth-error {
+      background: #fdecea;
+      color: #c0392b;
+      padding: 0.65rem 0.85rem;
+      border-radius: 10px;
+      font-size: 0.9rem;
+    }
+
+    .auth-error[hidden] {
+      display: none;
+    }
+
+    .user-bar {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+      margin-top: 0.75rem;
+      font-size: 0.85rem;
+      opacity: 0.7;
+    }
+
+    .btn-logout {
+      background: transparent;
+      border: 1px solid #e8ddd4;
+      color: var(--chocolate);
+      padding: 0.35rem 0.75rem;
+      font-size: 0.8rem;
+      border-radius: 8px;
+    }
+
+    .btn-logout:hover {
+      background: var(--cream);
+    }
+
+    #app-content[hidden] {
+      display: none;
+    }
+
     @media (max-width: 600px) {
       .person-header {
         flex-direction: column;
@@ -737,7 +828,55 @@
       <div class="emoji-header">🍦</div>
       <h1>IJsjesmeter</h1>
       <p>Wie probeert de meeste nieuwe ijsjes in de familie?</p>
+      <div class="user-bar" id="user-bar" hidden>
+        <span id="user-email"></span>
+        <button type="button" class="btn-logout" id="logout-btn">Uitloggen</button>
+      </div>
     </header>
+
+    <section id="auth-screen" class="auth-screen">
+      <div id="login-card">
+        <h2>🔐 Inloggen</h2>
+        <p class="muted">Log in om het familie-klassement te bekijken en bij te werken.</p>
+        <div id="auth-error" class="auth-error" hidden></div>
+        <form id="login-form" class="auth-form">
+          <div class="field">
+            <label for="login-email">E-mailadres</label>
+            <input type="email" id="login-email" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="login-password">Wachtwoord</label>
+            <input type="password" id="login-password" required autocomplete="current-password" minlength="6">
+          </div>
+          <button type="submit" class="btn-primary">Inloggen</button>
+        </form>
+        <p class="auth-switch">Nog geen account? <button type="button" class="link-btn" id="show-signup">Registreren</button></p>
+      </div>
+
+      <div id="signup-card" hidden>
+        <h2>📝 Registreren</h2>
+        <p class="muted">Maak een account aan om mee te doen met het ijsjescontest.</p>
+        <div id="signup-error" class="auth-error" hidden></div>
+        <form id="signup-form" class="auth-form">
+          <div class="field">
+            <label for="signup-email">E-mailadres</label>
+            <input type="email" id="signup-email" required autocomplete="email">
+          </div>
+          <div class="field">
+            <label for="signup-password">Wachtwoord</label>
+            <input type="password" id="signup-password" required autocomplete="new-password" minlength="6" placeholder="Minimaal 6 tekens">
+          </div>
+          <div class="field">
+            <label for="signup-code">Familiecode</label>
+            <input type="text" id="signup-code" required autocomplete="off" placeholder="Vraag de code aan een familielid">
+          </div>
+          <button type="submit" class="btn-primary">Account aanmaken</button>
+        </form>
+        <p class="auth-switch">Al een account? <button type="button" class="link-btn" id="show-login">Inloggen</button></p>
+      </div>
+    </section>
+
+    <div id="app-content" hidden>
 
     <div id="sync-status" class="sync-status sync-loading">Verbinden met Firebase…</div>
 
@@ -802,6 +941,7 @@
     </section>
 
     <footer>Data wordt opgeslagen in Firebase – wijzigingen zijn direct zichtbaar voor iedereen</footer>
+    </div>
   </div>
 
   <script src="firebase-config.js"></script>

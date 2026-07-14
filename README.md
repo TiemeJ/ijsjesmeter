@@ -62,18 +62,30 @@ service cloud.firestore {
 
 3. Click **Publish**
 
-This means: only signed-in users (the app signs in anonymously automatically) can read and write data.
+This means: only signed-in users can read and write data.
 
 ---
 
-## Step 4: Enable Anonymous Authentication
+## Step 4: Enable Email/Password Authentication
+
+Family members log in with their own email and password to see the same shared data.
 
 1. In the left menu: **Build → Authentication**
 2. Click **Get started**
 3. Open the **Sign-in method** tab
-4. Click **Anonymous** → enable it → **Save**
+4. Click **Email/Password** → enable **Email/Password** (first toggle) → **Save**
 
-Without this step, you'll get an error when connecting.
+You can disable **Anonymous** sign-in if it was enabled earlier — the app no longer uses it.
+
+### Authorize your website domain
+
+1. In **Authentication**, go to **Settings** → **Authorized domains**
+2. Make sure these domains are listed:
+   - `localhost` (for local testing)
+   - `tiemej.github.io` (or your GitHub Pages domain)
+3. Click **Add domain** if your GitHub Pages URL is not listed yet
+
+Without this step, login will fail on the live website.
 
 ---
 
@@ -92,9 +104,12 @@ const FIREBASE_CONFIG = {
 };
 
 const FAMILY_ID = "jansen-ijs-2026";  // pick your own unique name
+const FAMILY_ACCESS_CODE = "your-secret-code";  // share only with family
 ```
 
-**FAMILY_ID**: a unique name for your family's database. Everyone using the same `FAMILY_ID` shares the same data. Pick something that's not easy to guess (e.g. `fam-jansen-ijs-2026`).
+**FAMILY_ID**: a unique name for your family's database. Everyone using the same `FAMILY_ID` shares the same data.
+
+**FAMILY_ACCESS_CODE**: family members need this code when registering. Share it privately (e.g. via WhatsApp) so strangers can't create accounts.
 
 ---
 
@@ -108,7 +123,8 @@ npx serve -l 8080
 
 Open [http://localhost:8080](http://localhost:8080).
 
-- Green status bar = connected to Firebase
+- Register an account (you need the **familiecode** / family access code)
+- Log in on any device — everyone sees the same data in real time
 - Add a participant and check in the Firebase Console under **Firestore Database** that data appears under `families → [your FAMILY_ID] → people`
 
 ---
@@ -144,7 +160,9 @@ Changes are synced **in real time**: if someone adds an ice cream on their phone
 | Problem | Solution |
 |---------|----------|
 | "Firebase niet geconfigureerd" (Firebase not configured) | Fill in `firebase-config.js` (no more `VUL_IN` placeholders) |
-| "Verbinding mislukt" (Connection failed) | Check that Anonymous Auth is enabled |
+| "Verbinding mislukt" (Connection failed) | Check Email/Password auth is enabled and your domain is authorized |
+| Login fails on GitHub Pages | Add your `*.github.io` domain under Authentication → Authorized domains |
+| "Onjuiste familiecode" | Use the `FAMILY_ACCESS_CODE` from `firebase-config.js` |
 | "Permission denied" in console | Check that Firestore rules have been published |
 | Data not visible | Check that `FAMILY_ID` is the same everywhere |
 | Blank page locally | Use `npx serve`, don't open via `file://` |

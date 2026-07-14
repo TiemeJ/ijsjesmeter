@@ -14,3 +14,6 @@ const FIREBASE_CONFIG = {
 // Pick a unique name for your family (e.g. "jansen-ijs-2026").
 // Everyone with the same FAMILY_ID shares the same data.
 const FAMILY_ID = "my-family";
+
+// Family members need this code when registering (share only with your family).
+const FAMILY_ACCESS_CODE = "pick-a-secret-code";

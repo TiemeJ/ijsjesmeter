@@ -1,6 +1,8 @@
 let db;
 let peopleRef;
 let entriesRef;
+let unsubscribePeople = null;
+let unsubscribeEntries = null;
 
 let state = { people: [], entries: [] };
 let isReady = false;
@@ -95,6 +97,105 @@ function setFormsDisabled(disabled) {
   selects.forEach(el => {
     el.disabled = disabled;
   });
+}
+
+function authErrorMessage(code) {
+  const messages = {
+    'auth/invalid-email': 'Ongeldig e-mailadres.',
+    'auth/user-not-found': 'Geen account gevonden met dit e-mailadres.',
+    'auth/wrong-password': 'Onjuist wachtwoord.',
+    'auth/invalid-credential': 'Onjuist e-mailadres of wachtwoord.',
+    'auth/email-already-in-use': 'Dit e-mailadres is al in gebruik.',
+    'auth/weak-password': 'Wachtwoord is te zwak (minimaal 6 tekens).',
+    'auth/too-many-requests': 'Te veel pogingen. Probeer het later opnieuw.'
+  };
+  return messages[code] || 'Er ging iets mis. Probeer het opnieuw.';
+}
+
+function showAuthError(el, err) {
+  if (!el) return;
+  el.hidden = false;
+  el.textContent = authErrorMessage(err.code);
+}
+
+function clearAuthErrors() {
+  ['auth-error', 'signup-error'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) {
+      el.hidden = true;
+      el.textContent = '';
+    }
+  });
+}
+
+function showLoginView() {
+  document.getElementById('login-card').hidden = false;
+  document.getElementById('signup-card').hidden = true;
+  document.getElementById('auth-screen').hidden = false;
+  document.getElementById('app-content').hidden = true;
+  document.getElementById('user-bar').hidden = true;
+  clearAuthErrors();
+}
+
+function showSignupView() {
+  document.getElementById('login-card').hidden = true;
+  document.getElementById('signup-card').hidden = false;
+  clearAuthErrors();
+}
+
+function showApp(user) {
+  document.getElementById('auth-screen').hidden = true;
+  document.getElementById('app-content').hidden = false;
+  document.getElementById('user-bar').hidden = false;
+  document.getElementById('user-email').textContent = user.email || '';
+}
+
+function stopDataListeners() {
+  if (unsubscribePeople) {
+    unsubscribePeople();
+    unsubscribePeople = null;
+  }
+  if (unsubscribeEntries) {
+    unsubscribeEntries();
+    unsubscribeEntries = null;
+  }
+  isReady = false;
+  state = { people: [], entries: [] };
+}
+
+function startDataListeners() {
+  stopDataListeners();
+
+  const familyRef = db.collection('families').doc(FAMILY_ID);
+  peopleRef = familyRef.collection('people');
+  entriesRef = familyRef.collection('entries');
+
+  unsubscribePeople = peopleRef.onSnapshot(
+    (snapshot) => {
+      state.people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      render();
+    },
+    (err) => {
+      console.error(err);
+      setStatus('error', 'Kon deelnemers niet laden');
+    }
+  );
+
+  unsubscribeEntries = entriesRef.onSnapshot(
+    (snapshot) => {
+      state.entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+      render();
+    },
+    (err) => {
+      console.error(err);
+      setStatus('error', 'Kon ijsjes niet laden');
+    }
+  );
+
+  isReady = true;
+  setFormsDisabled(false);
+  setStatus('ok');
+  render();
 }
 
 function renderLeaderboard() {
@@ -297,6 +398,54 @@ function setupEventListeners() {
   const openParticipants = document.getElementById('open-participants');
   const closeParticipants = document.getElementById('close-participants');
 
+  document.getElementById('show-signup').addEventListener('click', showSignupView);
+  document.getElementById('show-login').addEventListener('click', showLoginView);
+
+  document.getElementById('login-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAuthErrors();
+    const email = document.getElementById('login-email').value.trim();
+    const password = document.getElementById('login-password').value;
+
+    try {
+      await firebase.auth().signInWithEmailAndPassword(email, password);
+    } catch (err) {
+      console.error(err);
+      showAuthError(document.getElementById('auth-error'), err);
+    }
+  });
+
+  document.getElementById('signup-form').addEventListener('submit', async (e) => {
+    e.preventDefault();
+    clearAuthErrors();
+    const email = document.getElementById('signup-email').value.trim();
+    const password = document.getElementById('signup-password').value;
+    const code = document.getElementById('signup-code').value.trim();
+
+    if (code !== FAMILY_ACCESS_CODE) {
+      const el = document.getElementById('signup-error');
+      el.hidden = false;
+      el.textContent = 'Onjuiste familiecode.';
+      return;
+    }
+
+    try {
+      await firebase.auth().createUserWithEmailAndPassword(email, password);
+    } catch (err) {
+      console.error(err);
+      showAuthError(document.getElementById('signup-error'), err);
+    }
+  });
+
+  document.getElementById('logout-btn').addEventListener('click', async () => {
+    try {
+      await firebase.auth().signOut();
+    } catch (err) {
+      console.error(err);
+      alert('Uitloggen mislukt.');
+    }
+  });
+
   if (participantsDialog && openParticipants) {
     openParticipants.addEventListener('click', () => {
       participantsDialog.showModal();
@@ -391,45 +540,23 @@ async function initFirebase() {
     return;
   }
 
-  setStatus('loading', 'Verbinden met Firebase…');
-  setFormsDisabled(true);
-
   try {
     firebase.initializeApp(FIREBASE_CONFIG);
     db = firebase.firestore();
 
-    await firebase.auth().signInAnonymously();
-
-    const familyRef = db.collection('families').doc(FAMILY_ID);
-    peopleRef = familyRef.collection('people');
-    entriesRef = familyRef.collection('entries');
-
-    peopleRef.onSnapshot(
-      (snapshot) => {
-        state.people = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        render();
-      },
-      (err) => {
-        console.error(err);
-        setStatus('error', 'Kon deelnemers niet laden');
+    firebase.auth().onAuthStateChanged((user) => {
+      if (user) {
+        showApp(user);
+        setStatus('loading', 'Gegevens laden…');
+        setFormsDisabled(true);
+        startDataListeners();
+      } else {
+        stopDataListeners();
+        setFormsDisabled(false);
+        setStatus('ok');
+        showLoginView();
       }
-    );
-
-    entriesRef.onSnapshot(
-      (snapshot) => {
-        state.entries = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-        render();
-      },
-      (err) => {
-        console.error(err);
-        setStatus('error', 'Kon ijsjes niet laden');
-      }
-    );
-
-    isReady = true;
-    setFormsDisabled(false);
-    setStatus('ok');
-    render();
+    });
   } catch (err) {
     console.error(err);
     setStatus('error', 'Verbinding mislukt – controleer firebase-config.js');
