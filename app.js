@@ -7,6 +7,29 @@ let unsubscribeEntries = null;
 let state = { people: [], entries: [] };
 let isReady = false;
 
+const FAMILY_MILESTONE = 25;
+
+const FAMILY_PRIZE_TIERS = [
+  { emoji: '🥉', name: 'Brons' },
+  { emoji: '🥈', name: 'Zilver' },
+  { emoji: '🥇', name: 'Goud' },
+  { emoji: '🏆', name: 'Kampioen' },
+  { emoji: '⭐', name: 'Superster' },
+  { emoji: '👑', name: 'Koning(in)' },
+  { emoji: '💎', name: 'Diamant' },
+  { emoji: '🦄', name: 'Legende' }
+];
+
+function getFamilyUniqueCount() {
+  return getAllUniqueFlavorsAcrossFamily().length;
+}
+
+function getPrizeTier(milestoneIndex) {
+  const tier = FAMILY_PRIZE_TIERS[milestoneIndex];
+  if (tier) return tier;
+  return { emoji: '🎖️', name: `Prijs ${milestoneIndex + 1}` };
+}
+
 function normalizeFlavor(name) {
   return name.trim().toLowerCase();
 }
@@ -216,7 +239,7 @@ function renderLeaderboard() {
   const medals = { 1: '🥇', 2: '🥈', 3: '🥉' };
 
   // Ranking with ties: equal uniqueCount shares medal/rank group.
-  let currentRank = 0; // 1-based, increments per distinct score
+  let currentRank = 0;
   let lastCount = null;
 
   list.innerHTML = ranked.map((p) => {
@@ -343,12 +366,103 @@ function renderMatrix() {
   table.innerHTML = `${thead}<tbody><tr>${rowCells}</tr></tbody>`;
 }
 
+function getFamilyUniqueCount() {
+  return getAllUniqueFlavorsAcrossFamily().length;
+}
+
+const FAMILY_PRIZE_STEP = 25;
+const FAMILY_PRIZE_EMOJIS = ['🥉', '🥈', '🥇', '🏆', '🎖️', '⭐', '🌟', '👑'];
+const FAMILY_PRIZE_NAMES = [
+  'IJsstarter', 'Smaakkenner', 'IJsavonturier', 'Meesterproever',
+  'IJsheld', 'Smaaklegende', 'IJsmeester', 'Familie-kampioen'
+];
+
+function renderFamilyPrizes() {
+  const container = document.getElementById('family-prizes');
+  if (!container) return;
+
+  const count = getFamilyUniqueCount();
+  const earnedLevels = Math.floor(count / FAMILY_PRIZE_STEP);
+  const nextThreshold = (earnedLevels + 1) * FAMILY_PRIZE_STEP;
+  const remaining = nextThreshold - count;
+  const progressInTier = count % FAMILY_PRIZE_STEP;
+  const progressPct = (progressInTier / FAMILY_PRIZE_STEP) * 100;
+  const totalToShow = Math.max(earnedLevels + 3, 4);
+
+  const gridHtml = Array.from({ length: totalToShow }, (_, i) => {
+    const level = i + 1;
+    const threshold = level * FAMILY_PRIZE_STEP;
+    let status = 'locked';
+    if (count >= threshold) status = 'earned';
+    else if (threshold === nextThreshold) status = 'next';
+
+    const emoji = FAMILY_PRIZE_EMOJIS[i % FAMILY_PRIZE_EMOJIS.length];
+    const name = FAMILY_PRIZE_NAMES[i % FAMILY_PRIZE_NAMES.length];
+
+    return `
+      <div class="family-prize ${status}">
+        <div class="prize-emoji">${emoji}</div>
+        <div class="prize-threshold">${threshold}</div>
+        <div class="prize-name">${name}</div>
+      </div>
+    `;
+  }).join('');
+
+  const smaakLabel = count === 1 ? 'smaak' : 'smaken';
+  const teGaanLabel = remaining === 1 ? 'smaak' : 'smaken';
+
+  container.innerHTML = `
+    <div class="family-prizes-summary">
+      <div class="family-count-line">
+        Jullie hebben samen <strong>${count}</strong> unieke ${smaakLabel} geprobeerd
+      </div>
+      <div class="family-progress-wrap">
+        <div class="family-progress-label">
+          <span>Voortgang naar prijs ${earnedLevels + 1}</span>
+          <span>Nog ${remaining} unieke ${teGaanLabel}</span>
+        </div>
+        <div class="family-progress-bar">
+          <div class="family-progress-fill" style="width:${progressPct}%"></div>
+        </div>
+      </div>
+    </div>
+    <div class="family-prizes-grid">${gridHtml}</div>
+  `;
+}
+
+function renderFamilyFlavorsList() {
+  const empty = document.getElementById('family-flavors-empty');
+  const content = document.getElementById('family-flavors-content');
+  const countEl = document.getElementById('family-flavors-count');
+  const list = document.getElementById('family-flavors-list');
+  if (!empty || !content || !list) return;
+
+  const flavors = getAllUniqueFlavorsAcrossFamily();
+
+  if (flavors.length === 0) {
+    empty.hidden = false;
+    content.hidden = true;
+    list.innerHTML = '';
+    return;
+  }
+
+  empty.hidden = true;
+  content.hidden = false;
+  const label = flavors.length === 1 ? 'smaak' : 'smaken';
+  countEl.textContent = `${flavors.length} unieke ${label} in totaal`;
+  list.innerHTML = flavors.map(f => `
+    <li class="family-flavor-chip">${escapeHtml(f.display)}</li>
+  `).join('');
+}
+
 function render() {
   if (!isReady) return;
+  renderFamilyPrizes();
   renderLeaderboard();
   renderPersonSelect();
   renderPersonList();
   renderMatrix();
+  renderFamilyFlavorsList();
 }
 
 async function addPerson(name) {

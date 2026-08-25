@@ -224,6 +224,131 @@
       opacity: 0.55;
     }
 
+    /* Family prizes */
+    .family-prizes-summary {
+      margin-bottom: 1rem;
+    }
+
+    .family-count-line {
+      font-size: 1.05rem;
+      font-weight: 650;
+      margin-bottom: 0.75rem;
+    }
+
+    .family-count-line strong {
+      color: var(--pink);
+      font-size: 1.25rem;
+    }
+
+    .family-progress-wrap {
+      margin-bottom: 1.25rem;
+    }
+
+    .family-progress-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.85rem;
+      opacity: 0.75;
+      margin-bottom: 0.35rem;
+    }
+
+    .family-progress-bar {
+      height: 10px;
+      background: #eee;
+      border-radius: 999px;
+      overflow: hidden;
+    }
+
+    .family-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--mint), var(--gold));
+      border-radius: 999px;
+      transition: width 0.3s ease;
+    }
+
+    .family-prizes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+      gap: 0.75rem;
+    }
+
+    .family-prize {
+      text-align: center;
+      padding: 0.85rem 0.5rem;
+      border-radius: 14px;
+      border: 2px solid #f0e6dc;
+      background: var(--cream);
+      transition: transform 0.15s;
+    }
+
+    .family-prize.earned {
+      background: linear-gradient(135deg, #fff9e6, #ffe8a3);
+      border-color: var(--gold);
+    }
+
+    .family-prize.earned .prize-emoji {
+      filter: none;
+      opacity: 1;
+    }
+
+    .family-prize.next {
+      border-color: var(--mint);
+      background: linear-gradient(135deg, #e8f8f0, #fff);
+      box-shadow: 0 0 0 2px rgba(126, 200, 163, 0.25);
+    }
+
+    .family-prize.locked {
+      opacity: 0.45;
+    }
+
+    .prize-emoji {
+      font-size: 2rem;
+      line-height: 1;
+      margin-bottom: 0.35rem;
+      filter: grayscale(1);
+      opacity: 0.5;
+    }
+
+    .prize-threshold {
+      font-weight: 800;
+      font-size: 0.95rem;
+      color: var(--chocolate);
+    }
+
+    .prize-name {
+      font-size: 0.75rem;
+      opacity: 0.7;
+      margin-top: 0.15rem;
+    }
+
+    .family-prize.earned .prize-name {
+      opacity: 0.9;
+      font-weight: 600;
+    }
+
+    /* Family unique flavors list */
+    .family-flavors-count {
+      font-size: 0.95rem;
+      opacity: 0.7;
+      margin-bottom: 1rem;
+    }
+
+    .family-flavors-list {
+      list-style: none;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .family-flavor-chip {
+      padding: 0.4rem 0.75rem;
+      border-radius: 999px;
+      background: var(--cream);
+      border: 1px solid #f0e6dc;
+      font-weight: 600;
+      font-size: 0.9rem;
+    }
+
     /* Add person (collapsible) */
     .add-person-section {
       padding: 0;
@@ -885,6 +1010,12 @@
       Vul je gegevens in <code>firebase-config.js</code> en volg de stappen in <code>README.md</code>.
     </div>
 
+    <section id="family-prizes-section">
+      <h2>🎖️ Familieprijzen</h2>
+      <p class="muted">Samen nieuwe smaken proberen — elke 25 unieke smaken over de hele familie is een prijs!</p>
+      <div id="family-prizes"></div>
+    </section>
+
     <section id="leaderboard-section">
       <div class="section-header">
         <h2>🏆 Klassement</h2>
@@ -937,6 +1068,15 @@
       <div id="matrix-empty" class="empty-state" hidden>Voeg eerst deelnemers en ijsjes toe om het overzicht te zien.</div>
       <div class="matrix-wrap" id="matrix-wrap" hidden>
         <table class="matrix" id="matrix"></table>
+      </div>
+    </section>
+
+    <section>
+      <h2>🍦 Alle unieke smaken (familie)</h2>
+      <div id="family-flavors-empty" class="empty-state" hidden>Nog geen smaken toegevoegd.</div>
+      <div id="family-flavors-content" hidden>
+        <p class="family-flavors-count" id="family-flavors-count"></p>
+        <ul class="family-flavors-list" id="family-flavors-list"></ul>
       </div>
     </section>
 
